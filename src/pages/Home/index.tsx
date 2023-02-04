@@ -27,12 +27,14 @@ interface Cycle {
   task: string
   minutesAmount: number
   startDate: Date
+  interruptedData?: Date
+  finishedData?: Date
 }
 // END INTERFACE
 
 const newCycleFormValidationSchema = zod.object({
   task: zod.string().min(1, 'Informe a tarefa'),
-  minutesAmount: zod.number().min(5).max(60),
+  minutesAmount: zod.number().min(1).max(60),
 })
 
 export function Home() {
@@ -51,21 +53,39 @@ export function Home() {
   })
 
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
 
   useEffect(() => {
     let interval: number
     if (activeCycle) {
       interval = setInterval(() => {
-        setAmountSecondsPassed(
-          differenceInSeconds(new Date(), activeCycle.startDate),
+        const secondsDifference = differenceInSeconds(
+          new Date(),
+          activeCycle.startDate,
         )
+
+        if (secondsDifference >= totalSeconds) {
+          setCycles((state) =>
+            state.map((cycle) => {
+              if (cycle.id === activeCycleId) {
+                return { ...cycle, finishedData: new Date() }
+              } else {
+                return cycle
+              }
+            }),
+          )
+          setAmountSecondsPassed(totalSeconds)
+          clearInterval(interval)
+        } else {
+          setAmountSecondsPassed(secondsDifference)
+        }
       }, 1000)
     }
 
     return () => {
       clearInterval(interval)
     }
-  }, [activeCycle])
+  }, [activeCycle, totalSeconds, activeCycleId])
 
   // Functions of my application
   function handleCreateNewCycle(data: NewCycleFormData) {
@@ -84,11 +104,23 @@ export function Home() {
 
     reset()
   }
+
+  function hadleInterruptCycle() {
+    setCycles((state) =>
+      state.map((cycle) => {
+        if (cycle.id === activeCycleId) {
+          return { ...cycle, interruptedData: new Date() }
+        } else {
+          return cycle
+        }
+      }),
+    )
+    setActiveCycleId(null)
+  }
   // End of functions of my application
 
   // variables of my application
 
-  const totalSeconds = activeCycle ? activeCycle.minutesAmount * 60 : 0
   const currentSeconds = activeCycle ? totalSeconds - amountSecondsPassed : 0
   const minutesAmount = Math.floor(currentSeconds / 60)
   const secondsAmount = currentSeconds % 60
@@ -105,6 +137,8 @@ export function Home() {
   const task = watch('task')
   const isSubmitDisabled = !task
   // End of variables of my application
+
+  // console.log('cycles', cycles)
 
   return (
     <HomeContainer>
@@ -130,7 +164,7 @@ export function Home() {
             id="minutesAmount"
             placeholder="00"
             step={5}
-            min={5}
+            min={1}
             max={60}
             disabled={!!activeCycle}
             {...register('minutesAmount', { valueAsNumber: true })}
@@ -146,7 +180,7 @@ export function Home() {
           <span>{seconds[1]}</span>
         </CountdownContainer>
         {activeCycle ? (
-          <StopCountdownButton type="button">
+          <StopCountdownButton onClick={hadleInterruptCycle} type="button">
             <HandPalm />
             Interromper
           </StopCountdownButton>
