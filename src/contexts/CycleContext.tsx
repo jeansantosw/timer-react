@@ -10,8 +10,8 @@ interface Cycle {
   task: string
   minutesAmount: number
   startDate: Date
-  interruptedData?: Date
-  finishedData?: Date
+  interruptedDate?: Date
+  finishedDate?: Date
 }
 
 interface CyclesContextType {
@@ -46,7 +46,7 @@ export function CycleContextProvider({ children }: CyclesContextProviderProps) {
     setCycles((state) =>
       state.map((cycle) => {
         if (cycle.id === activeCycleId) {
-          return { ...cycle, interruptedData: new Date() }
+          return { ...cycle, interruptedDate: new Date() }
         } else {
           return cycle
         }
@@ -67,15 +67,13 @@ export function CycleContextProvider({ children }: CyclesContextProviderProps) {
     setCycles((state) => [...state, newCycle])
     setActiveCycleId(id)
     setAmountSecondsPassed(0)
-
-    // reset()
   }
 
   function interruptCurrentCycle() {
     setCycles((state) =>
       state.map((cycle) => {
         if (cycle.id === activeCycleId) {
-          return { ...cycle, interruptedData: new Date() }
+          return { ...cycle, interruptedDate: new Date() }
         } else {
           return cycle
         }
