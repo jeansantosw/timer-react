@@ -5,7 +5,7 @@ import {
   StartCountdownButton,
   StopCountdownButton,
 } from './styles'
-import { useEffect, useState } from 'react'
+import { createContext, useEffect, useState } from 'react'
 import { NewCycleForm } from './components/NewCycleFrom'
 import { Countdown } from './components/Countdown'
 
@@ -23,7 +23,14 @@ interface Cycle {
   interruptedData?: Date
   finishedData?: Date
 }
+
+interface CyclesContextType {
+  activeCycle: Cycle | undefined
+}
+
 // END INTERFACE
+
+export const CyclesContext = createContext({} as CyclesContextType)
 
 export function Home() {
   // Status of my application
@@ -89,8 +96,10 @@ export function Home() {
   return (
     <HomeContainer>
       <form onSubmit={handleSubmit(handleCreateNewCycle)} action="">
-        <NewCycleForm />
-        <Countdown />
+        <CyclesContext.Provider value={{ activeCycle }}>
+          <NewCycleForm />
+          <Countdown />
+        </CyclesContext.Provider>
 
         {activeCycle ? (
           <StopCountdownButton onClick={hadleInterruptCycle} type="button">
